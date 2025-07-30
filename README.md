@@ -119,3 +119,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Design inspiration from various modern blog platforms
 - Icons from [Heroicons](https://heroicons.com/)
 - Placeholder images from [Placeholder.com](https://placeholder.com/)
+# blog-ui

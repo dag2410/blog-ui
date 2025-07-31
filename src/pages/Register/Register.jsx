@@ -1,11 +1,14 @@
 import { useState } from "react";
+import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { Input, Button } from "../../components";
+import { toast } from "react-toastify";
+import { Input, Button } from "@/components";
 import styles from "./Register.module.scss";
-import instance from "../../utils/api";
+import { postRegister } from "@/features/auth/authAsync";
 
 const Register = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -84,6 +87,13 @@ const Register = () => {
       }));
     }
   };
+  const formatErrors = (errorArray = []) => {
+    const formatted = {};
+    errorArray.forEach((err) => {
+      formatted[err.field] = err.message;
+    });
+    return formatted;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -103,38 +113,31 @@ const Register = () => {
         last_name: formData.lastName,
         confirm: formData.confirmPassword,
       };
-      const response = await instance.post("/auth/register", payload);
-
-      console.log("Registration successful:", payload);
-      console.log(response.data.data);
-      setErrors({
-        submit:
-          "Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.",
+      const user = await dispatch(postRegister(payload)).unwrap();
+      toast.success("Đăng ký thành công! Bạn vui lòng kiểm tra email.", {
+        autoClose: 10000,
+        closeOnClick: false,
+        draggable: false,
+        position: "top-right",
       });
+      console.log("Registration successful:", user);
+      // console.log(user);
+
       setFormData({
         firstName: "",
         lastName: "",
         email: "",
         password: "",
         confirmPassword: "",
+        agreeToTerms: false,
       });
     } catch (error) {
-      console.error("Registration failed:", error);
+      console.error("Registration failed:", error.errors[0].message);
 
-      const fieldErrors = error.response.data.errors;
-      const newErrors = {};
-      if (fieldErrors.length > 0) {
-        fieldErrors.forEach((err) => {
-          if (err.field === "email") {
-            newErrors.email = err.message;
-          } else if (err.field === "password") {
-            newErrors.password = err.message;
-          } else {
-            newErrors.submit = err.message;
-          }
-        });
-        setErrors(newErrors);
+      if (error.errors.length > 0) {
+        // setErrors(formatErrors(error.errors));
       }
+      toast.error(error.errors[0].message || "Đăng ký thất bại.");
     } finally {
       setIsSubmitting(false);
     }

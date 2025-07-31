@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Input, Button } from "../../components";
 import styles from "./ResetPassword.module.scss";
-import instance from "../../utils/api";
+import instance from "../../utils/httpRequest";
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
@@ -29,9 +29,9 @@ const ResetPassword = () => {
 
     try {
       await instance.get(`/auth/reset-password?token=${token}`);
-      navigate("/reset-password", {
-        replace: true,
-      });
+      // navigate("/reset-password", {
+      //   replace: true,
+      // });
       setIsTokenValid(true);
     } catch (error) {
       setIsTokenValid(false);

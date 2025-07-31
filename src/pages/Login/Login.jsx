@@ -1,18 +1,22 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
 import { Input, Button } from "../../components";
 import styles from "./Login.module.scss";
-import instance from "../../utils/api";
+import { postLogIn } from "@/features/auth/authAsync";
 
 const Login = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { isLoading } = useSelector((state) => state.auth);
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     rememberMe: false,
   });
   const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
     const newErrors = {};
@@ -51,6 +55,14 @@ const Login = () => {
     }
   };
 
+  const formatErrors = (errorArray = []) => {
+    const formatted = {};
+    errorArray.forEach((err) => {
+      formatted[err.field] = err.message;
+    });
+    return formatted;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -58,37 +70,54 @@ const Login = () => {
       return;
     }
 
-    setIsSubmitting(true);
-
     try {
-      // Simulate API call
-      const response = await instance.post("/auth/login", {
-        email: formData.email,
-        password: formData.password,
-      });
-      const token = response.data.data.accessToken;
-      localStorage.setItem("access_token", token);
-      console.log(response.data.data);
-      // Mock successful login
+      const result = await dispatch(
+        postLogIn({
+          email: formData.email,
+          password: formData.password,
+        })
+      ).unwrap();
 
-      // Navigate to home or dashboard
-      navigate("/", { replace: true });
+      if (result.accessToken) {
+        localStorage.setItem("token", result.accessToken);
+      }
+
+      toast.success("Đăng nhập thành công!");
+      navigate("/");
     } catch (error) {
       console.error("Login failed:", error);
-      const fieldErrors = error.response.data.errors;
+
+      let errorMessage = "Đăng nhập thất bại! Vui lòng thử lại.";
       const newErrors = {};
-      if (fieldErrors.length > 0) {
-        fieldErrors.forEach((err) => {
-          if (err.field === "email") {
-            newErrors.email = err.message;
-          } else {
-            newErrors.submit = err.message;
-          }
-        });
-        setErrors(newErrors);
+
+      if (error.response && error.response.data) {
+        const { data } = error.response;
+
+        // Kiểm tra nếu BE trả về mảng errors
+        if (Array.isArray(data.errors) && data.errors.length > 0) {
+          data.errors.forEach((err) => {
+            if (err.field === "email") {
+              newErrors.email = err.message;
+            } else if (err.field === "password") {
+              newErrors.password = err.message;
+            } else {
+              newErrors.submit = err.message;
+            }
+          });
+        }
+        // Kiểm tra nếu BE trả về message chung
+        else if (data.message) {
+          newErrors.submit = data.message;
+        }
+        // Các trường hợp khác
+        else {
+          newErrors.submit = error.message || errorMessage;
+        }
+      } else {
+        newErrors.submit = error.message || errorMessage;
       }
-    } finally {
-      setIsSubmitting(false);
+
+      toast.error(newErrors.submit || errorMessage); // Hiển thị thông báo lỗi bằng toast
     }
   };
 
@@ -107,6 +136,7 @@ const Login = () => {
       {errors.submit && (
         <div className={styles.submitError}>{errors.submit}</div>
       )}
+
       {/* Form */}
       <form className={styles.form} onSubmit={handleSubmit}>
         {/* Email Field */}
@@ -155,10 +185,10 @@ const Login = () => {
           variant="primary"
           size="lg"
           fullWidth
-          loading={isSubmitting}
-          disabled={isSubmitting}
+          loading={isLoading}
+          disabled={isLoading}
         >
-          {isSubmitting ? "Signing In..." : "Sign In"}
+          {isLoading ? "Signing In..." : "Sign In"}
         </Button>
       </form>
 

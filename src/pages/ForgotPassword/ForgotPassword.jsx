@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Input, Button } from "../../components";
 import styles from "./ForgotPassword.module.scss";
-import instance from "../../utils/api";
+import instance from "../../utils/httpRequest";
+import { toast } from "react-toastify";
 
 const ForgotPassword = () => {
   const [formData, setFormData] = useState({
@@ -60,11 +61,8 @@ const ForgotPassword = () => {
       setIsSubmitted(true);
     } catch (error) {
       console.error("Failed to send reset email:", error);
-      setErrors({
-        submit:
-          error.response?.data?.message ||
-          "Không thể gửi email. Vui lòng thử lại.",
-      });
+
+      toast.error(error.response?.data?.message);
     } finally {
       setIsSubmitting(false);
     }

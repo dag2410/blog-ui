@@ -1,37 +1,32 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import instance from "../../utils/api";
+import { useDispatch } from "react-redux";
+import { verifyEmail } from "@/features/auth/authAsync";
 
 const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [message, setMessage] = useState("Đang xác thực tài khoản...");
 
   useEffect(() => {
-    const verify = async () => {
-      const token = searchParams.get("token");
-      if (!token) {
-        setMessage("Thiếu mã xác thực.");
-        return;
-      }
+    const token = searchParams.get("token");
+    if (!token) {
+      setMessage("Thiếu mã xác thực.");
+      return;
+    }
 
-      try {
-        const res = await instance.get(`/auth/verify-email?token=${token}`);
-        setMessage(res.data.message || "Xác thực thành công!");
-        navigate("/verify-email", { replace: true });
-
-        setTimeout(() => {
-          navigate("/login");
-        }, 2000);
-      } catch (err) {
+    dispatch(verifyEmail(token))
+      .unwrap()
+      .then((res) => {
+        setMessage(res.message || "Xác thực thành công!");
+        setTimeout(() => navigate("/login"), 2000);
+      })
+      .catch((err) => {
         setMessage(
-          err.response?.data?.message ||
-            "Xác thực thất bại. Token không hợp lệ hoặc đã hết hạn."
+          err || "Xác thực thất bại. Token không hợp lệ hoặc đã hết hạn."
         );
-      }
-    };
-
-    verify();
+      });
   }, []);
 
   return (

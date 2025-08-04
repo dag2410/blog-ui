@@ -108,6 +108,7 @@ const BlogDetail = () => {
       };
 
       await dispatch(createComment(replyData));
+      await dispatch(fetchComments({ postId: post.id }));
       console.log("Reply added successfully");
     } catch (error) {
       console.error("Failed to add reply:", error);

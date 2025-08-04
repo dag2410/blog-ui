@@ -1,10 +1,11 @@
-import PropTypes from "prop-types";
-import PostCard from "../PostCard/PostCard";
-import EmptyState from "../EmptyState/EmptyState";
-import styles from "./RelatedPosts.module.scss";
+import { toggleLike } from "@/features/like/likeAsync";
 import { calculateReadTime } from "@/utils/readTime";
+import PropTypes from "prop-types";
 import { useDispatch, useSelector } from "react-redux";
-import { createLike, deleteLike } from "@/features/like/likeAsync";
+import EmptyState from "../EmptyState/EmptyState";
+import PostCard from "../PostCard/PostCard";
+import styles from "./RelatedPosts.module.scss";
+import { toggleBookmark } from "@/features/bookmark/bookmarkAsync";
 
 const RelatedPosts = ({
   posts = [],
@@ -16,30 +17,36 @@ const RelatedPosts = ({
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.currentUser);
 
-  const handleToggleLike = async (slug, willLike) => {
+  const handleToggleLike = async (slug) => {
     const post = posts.find((p) => p.slug === slug);
     if (!post || !user) return;
 
     const payload = {
       likeable_type: "Post",
       likeable_id: post.id,
-      user_id: user.id,
     };
 
     try {
-      if (willLike) {
-        await dispatch(createLike(payload)).unwrap();
-      } else {
-        await dispatch(deleteLike(payload)).unwrap();
-      }
-      console.log(`Post ${willLike ? "liked" : "unliked"}:`, slug);
+      const result = await dispatch(toggleLike(payload)).unwrap();
+      console.log(result);
     } catch (error) {
       console.error("Failed to toggle like:", error);
     }
   };
-  const handleToggleBookmark = async (slug, willBookmark) => {
-    // Implement bookmark functionality if needed
-    console.log(`Bookmark ${willBookmark ? "added" : "removed"}:`, slug);
+
+  const handleToggleBookmark = async (slug) => {
+    const post = posts.find((p) => p.slug === slug);
+    if (!post || !user) return;
+    try {
+      const result = await dispatch(
+        toggleBookmark({
+          user_id: user.id,
+          post_id: post.id,
+        })
+      ).unwrap();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const displayPosts = posts.slice(0, maxPosts);
@@ -91,7 +98,7 @@ const RelatedPosts = ({
             }}
             publishedAt={post.published_at || post.publishedAt || ""}
             readTime={calculateReadTime(post.content)}
-            topic={post.topics?.map((topic) => topic.name).join(" & ")}
+            topic={post.topics?.map((topic) => topic.name).join(" · ")}
             slug={post.slug}
             featuredImage={post.featuredImage}
             // Like functionality
@@ -101,7 +108,9 @@ const RelatedPosts = ({
               Array.isArray(post.likes) &&
               post.likes.some((like) => like.user_id === user?.id)
             }
-            isBookmarked={false}
+            isBookmarked={post.bookmarks.some(
+              (bookmark) => bookmark.user_id === user.id
+            )}
             showInteractions={true}
             showViewCount={true}
             onLike={handleToggleLike}

@@ -1,29 +1,30 @@
-import { useState, useEffect } from "react";
+import {
+  createComment,
+  deleteComment,
+  fetchComments,
+  updateComment,
+} from "@/features/comment/commentAsync";
+import { toggleLike } from "@/features/like/likeAsync";
+import { fetchPost, fetchRelatedPosts } from "@/features/post/postAsync";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import {
-  BlogContent,
   AuthorInfo,
-  RelatedPosts,
+  BlogContent,
   CommentSection,
   Loading,
+  RelatedPosts,
 } from "../../components";
 import styles from "./BlogDetail.module.scss";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchPost, fetchRelatedPosts } from "@/features/post/postAsync";
-import {
-  fetchComments,
-  createComment,
-  updateComment,
-  deleteComment,
-} from "@/features/comment/commentAsync";
-import { createLike, deleteLike } from "@/features/like/likeAsync";
+import { toggleBookmark } from "@/features/bookmark/bookmarkAsync";
 
 const BlogDetail = () => {
   const { slug } = useParams();
   const [loading, setLoading] = useState(true);
   const [isAuthenticated] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [likedComments, setLikedComments] = useState({});
   const [likingInProgress, setLikingInProgress] = useState(false);
   const [bookmarkingInProgress, setBookmarkingInProgress] = useState(false);
   const [commentEdit, setCommentEdit] = useState([]);
@@ -34,6 +35,10 @@ const BlogDetail = () => {
   const relatedPosts = useSelector((state) => state.post?.relatedPosts);
   const comments = useSelector((state) => state.comment?.items || []);
   const commentsLoading = useSelector((state) => state.comment?.loading);
+  const bookmarks = useSelector(
+    (state) => state.post?.selected?.data.bookmarks
+  );
+  const isBookmarked = bookmarks?.some((b) => b.user_id === user.id);
 
   useEffect(() => {
     const loadPost = async () => {
@@ -54,7 +59,8 @@ const BlogDetail = () => {
     if (post?.topics?.length > 0) {
       const loadRelatedPosts = async () => {
         try {
-          const topicId = post.topics[0].id;
+          const topicId =
+            post.topics[Math.floor(Math.random() * post.topics.length)].id;
           const excludeSlug = post.slug;
           await dispatch(fetchRelatedPosts({ topicId, excludeSlug }));
         } catch (error) {
@@ -84,6 +90,7 @@ const BlogDetail = () => {
       const commentEdit = await dispatch(createComment(commentData));
       setCommentEdit(commentEdit);
       console.log("Comment added successfully");
+      await dispatch(fetchComments({ postId: post.id }));
     } catch (error) {
       console.error("Failed to add comment:", error);
     }
@@ -104,14 +111,6 @@ const BlogDetail = () => {
       console.log("Reply added successfully");
     } catch (error) {
       console.error("Failed to add reply:", error);
-    }
-  };
-
-  const handleLikeComment = async (commentId) => {
-    try {
-      console.log("Comment like toggled:", commentId);
-    } catch (error) {
-      console.error("Failed to toggle comment like:", error);
     }
   };
 
@@ -154,34 +153,64 @@ const BlogDetail = () => {
 
     setIsLiked(liked);
   }, [post, user]);
+  const handleLikeComment = async (commentId) => {
+    if (likingInProgress || !user || !commentId) return;
+
+    setLikingInProgress(true);
+    const payload = {
+      likeable_type: "Comment",
+      likeable_id: commentId,
+    };
+
+    try {
+      const result = await dispatch(toggleLike(payload)).unwrap();
+      const action = result?.action;
+
+      setLikedComments((prev) => ({
+        ...prev,
+        [commentId]: action === "liked",
+      }));
+
+      await dispatch(fetchComments({ postId: post.id }));
+    } catch (error) {
+      console.error("Failed to toggle like:", error);
+    } finally {
+      setLikingInProgress(false);
+    }
+  };
 
   const handleLikePost = async () => {
     if (likingInProgress || !user || !post?.id) return;
 
     setLikingInProgress(true);
-    const willLike = !isLiked;
-    setIsLiked(willLike);
-
     const payload = {
       likeable_type: "Post",
       likeable_id: post.id,
-      user_id: user.id,
     };
 
     try {
-      if (willLike) {
-        await dispatch(createLike(payload)).unwrap();
-        post.likes_count + 1;
-      } else {
-        await dispatch(deleteLike(payload)).unwrap();
-        post.likes_count - 1;
-      }
+      const result = await dispatch(toggleLike(payload)).unwrap();
+      const action = result?.action;
+      setIsLiked(action === "liked");
+
       await dispatch(fetchPost(slug));
     } catch (error) {
-      setIsLiked(!willLike);
       console.error("Failed to toggle like:", error);
     } finally {
       setLikingInProgress(false);
+    }
+  };
+  const handleToggleBookmark = async () => {
+    try {
+      await dispatch(
+        toggleBookmark({
+          user_id: user.id,
+          post_id: post.id,
+        })
+      ).unwrap();
+      await dispatch(fetchPost(slug));
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -270,7 +299,7 @@ const BlogDetail = () => {
               className={`${styles.actionButton} ${
                 isBookmarked ? styles.bookmarked : ""
               } ${bookmarkingInProgress ? styles.loading : ""}`}
-              // onClick={handleBookmarkPost}
+              onClick={handleToggleBookmark}
               disabled={bookmarkingInProgress}
               title={isBookmarked ? "Remove bookmark" : "Bookmark"}
               aria-label={`${
@@ -332,6 +361,7 @@ const BlogDetail = () => {
           onEditComment={handleEditComment}
           onDeleteComment={handleDeleteComment}
           isAuthenticated={isAuthenticated}
+          likes={comments.likes_count || 0}
         />
       </div>
     </div>

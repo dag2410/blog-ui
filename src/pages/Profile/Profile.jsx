@@ -48,7 +48,6 @@ const Profile = () => {
       const data = await dispatch(
         fetchUserPosts({ userId: profile.id, page: currentPage })
       );
-      console.log(data);
       const postsData = data.payload.data;
 
       setPosts(postsData);

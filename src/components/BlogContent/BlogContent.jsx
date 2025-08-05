@@ -90,10 +90,7 @@ const BlogContent = ({
               />
             )}
             <div className={styles.authorInfo}>
-              <Link
-                to={`/profile/${author?.username}`}
-                className={styles.authorName}
-              >
+              <Link to={`/profile/${author?.id}`} className={styles.authorName}>
                 {author?.username}
               </Link>
               <div className={styles.dateInfo}>
@@ -151,6 +148,7 @@ BlogContent.propTypes = {
   title: PropTypes.string.isRequired,
   content: PropTypes.oneOfType([PropTypes.string, PropTypes.node]).isRequired,
   author: PropTypes.shape({
+    id: PropTypes.number,
     name: PropTypes.string.isRequired,
     avatar: PropTypes.string,
     username: PropTypes.string,

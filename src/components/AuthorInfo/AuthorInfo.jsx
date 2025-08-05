@@ -34,6 +34,7 @@ const AuthorInfo = ({
   }
 
   const {
+    id,
     name,
     title,
     bio,
@@ -52,12 +53,7 @@ const AuthorInfo = ({
         </div>
         <div className={styles.info}>
           <h3 className={styles.name}>
-            <Link
-              to={`/profile/${
-                author?.username || name?.toLowerCase().replace(/\s+/g, "-")
-              }`}
-              className={styles.nameLink}
-            >
+            <Link to={`/profile/${author?.id}`} className={styles.nameLink}>
               {name}
             </Link>
           </h3>
@@ -183,6 +179,7 @@ const AuthorInfo = ({
 
 AuthorInfo.propTypes = {
   author: PropTypes.shape({
+    id: PropTypes.number,
     name: PropTypes.string.isRequired,
     username: PropTypes.string,
     title: PropTypes.string,

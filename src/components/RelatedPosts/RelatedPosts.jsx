@@ -93,6 +93,7 @@ const RelatedPosts = ({
             title={post.title}
             description={post.description}
             author={{
+              id: post.users?.id,
               name: post.users?.username || post.author?.name,
               avatar: post.users?.avatar || post.author?.avatar,
             }}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, data } from "react-router-dom";
 import AuthorInfo from "../../components/AuthorInfo/AuthorInfo";
 import PostList from "../../components/PostList/PostList";
 import Button from "../../components/Button/Button";
@@ -13,9 +13,10 @@ import styles from "./Profile.module.scss";
 import { useDispatch, useSelector } from "react-redux";
 import { getCurrentUser } from "@/features/auth/authAsync";
 import { fetchUserPosts } from "@/features/post/postAsync";
+import { fetchUser } from "@/features/user/userAsync";
 
 const Profile = () => {
-  const { username } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -27,20 +28,29 @@ const Profile = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isChatMinimized, setIsChatMinimized] = useState(false);
   const dispatch = useDispatch();
-  const currentUser = useSelector((state) => state.auth.currentUser);
-  const isOwnProfile = currentUser?.username === username;
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
       setLoading(true);
-      const data = await dispatch(getCurrentUser());
-      const user = data.payload;
-      setProfile(user);
+      const result = await dispatch(getCurrentUser());
+      const currentUser = result.payload;
+      console.log(currentUser);
+      const isOwn = String(currentUser?.id) === String(id);
+      setIsOwnProfile(isOwn);
+
+      if (isOwn) {
+        setProfile(currentUser);
+      } else {
+        const user = await dispatch(fetchUser(id));
+        setProfile(user.payload);
+      }
+
       setLoading(false);
     };
 
     loadProfile();
-  }, [username]);
+  }, [id]);
 
   useEffect(() => {
     const loadPosts = async () => {
@@ -149,7 +159,7 @@ const Profile = () => {
                   <Button
                     variant="secondary"
                     size="md"
-                    onClick={() => navigate(`/profile/${username}/edit`)}
+                    onClick={() => navigate(`/profile/${id}/edit`)}
                   >
                     Edit Profile
                   </Button>

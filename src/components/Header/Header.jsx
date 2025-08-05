@@ -174,7 +174,7 @@ const Header = () => {
                       </div>
                       <nav className={styles.dropdownNav}>
                         <Link
-                          to={`/profile/${currentUser?.username || "user"}`}
+                          to={`/profile/${currentUser?.id || "user"}`}
                           className={styles.dropdownItem}
                         >
                           Profile

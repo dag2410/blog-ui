@@ -81,7 +81,7 @@ const PostList = ({
             <PostCard
               title={post.title}
               description={post.description}
-              author={{ name: post?.users?.username }}
+              author={{ id: post?.users?.id, name: post?.users?.username }}
               publishedAt={post.published_at}
               readTime={calculateReadTime(post.content)}
               topic={post.topics.map((topic) => topic.name).join(" · ")}

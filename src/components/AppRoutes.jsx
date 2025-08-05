@@ -44,8 +44,8 @@ const AppRoutes = () => {
             <Route path="topics" element={<TopicsListing />} />
             <Route path="topics/:slug" element={<Topic />} />
             <Route path="blog/:slug" element={<BlogDetail />} />
-            <Route path="profile/:username" element={<Profile />} />
-            <Route path="profile/:username/edit" element={<EditProfile />} />
+            <Route path="profile/:id" element={<Profile />} />
+            <Route path="profile/:id/edit" element={<EditProfile />} />
             <Route path="my-posts" element={<MyPosts />} />
             <Route path="bookmarks" element={<Bookmarks />} />
             <Route path="settings" element={<Settings />} />

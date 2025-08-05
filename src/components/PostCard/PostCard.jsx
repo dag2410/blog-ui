@@ -159,7 +159,7 @@ const PostCard = ({
                 lazy={true}
               />
             )}
-            <Link to={`/profile/${author?.name}`} className={styles.authorName}>
+            <Link to={`/profile/${author?.id}`} className={styles.authorName}>
               {author?.name}
             </Link>
           </div>
@@ -285,6 +285,7 @@ PostCard.propTypes = {
   title: PropTypes.string.isRequired,
   description: PropTypes.string,
   author: PropTypes.shape({
+    id: PropTypes.number,
     name: PropTypes.string.isRequired,
     avatar: PropTypes.string,
     username: PropTypes.string,

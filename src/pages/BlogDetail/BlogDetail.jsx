@@ -329,7 +329,8 @@ const BlogDetail = () => {
       <div className={styles.authorSection}>
         <AuthorInfo
           author={{
-            name: `${post.users.username}`,
+            id: post.users.id,
+            name: post.users.username,
             title: post.users.title,
             bio: post.users.about,
             avatar: post.users.avatar,

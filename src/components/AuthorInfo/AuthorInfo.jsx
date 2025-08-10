@@ -1,7 +1,14 @@
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { useState, useEffect } from "react";
 import Button from "../Button/Button";
 import FallbackImage from "../FallbackImage/FallbackImage";
+import {
+  fetchFollowers,
+  fetchFollowing,
+  toggleFollow,
+} from "@/features/follow/followAsync";
 import styles from "./AuthorInfo.module.scss";
 
 const AuthorInfo = ({
@@ -13,6 +20,50 @@ const AuthorInfo = ({
   className,
   ...props
 }) => {
+  const dispatch = useDispatch();
+  const [localAuthor, setLocalAuthor] = useState(author);
+  const user = useSelector((state) => state.auth.currentUser);
+  const followLoading = useSelector((state) => state.follow.isLoading);
+  const followingList = useSelector((state) => state.follow.following || []);
+  const isFollowing = followingList.some(
+    (fl) => String(fl.id) === String(author?.id)
+  );
+  const isOwnProfile = user?.id && String(user.id) === String(author?.id);
+
+  useEffect(() => {
+    setLocalAuthor(author);
+  }, [author]);
+
+  useEffect(() => {
+    const loadFollowUser = async () => {
+      if (user?.id) {
+        await dispatch(fetchFollowing(user.id));
+        await dispatch(fetchFollowers(user.id));
+      }
+    };
+    loadFollowUser();
+  }, [dispatch, author.id]);
+
+  const handleToggleFollow = async () => {
+    if (!user?.id || !author?.id || isOwnProfile) return;
+
+    setLocalAuthor((author) => ({
+      ...author,
+      followers: isFollowing
+        ? (author.followers || 0) - 1
+        : (author.followers || 0) + 1,
+    }));
+
+    await dispatch(
+      toggleFollow({
+        following: user.id,
+        followed_id: author.id,
+      })
+    );
+
+    await dispatch(fetchFollowing(user?.id));
+  };
+
   if (loading) {
     return (
       <div className={`${styles.authorInfo} ${className || ""}`} {...props}>
@@ -29,7 +80,7 @@ const AuthorInfo = ({
     );
   }
 
-  if (!author) {
+  if (!localAuthor) {
     return null;
   }
 
@@ -43,7 +94,7 @@ const AuthorInfo = ({
     postsCount,
     followers,
     following,
-  } = author;
+  } = localAuthor;
 
   return (
     <div className={`${styles.authorInfo} ${className || ""}`} {...props}>
@@ -53,7 +104,7 @@ const AuthorInfo = ({
         </div>
         <div className={styles.info}>
           <h3 className={styles.name}>
-            <Link to={`/profile/${author?.id}`} className={styles.nameLink}>
+            <Link to={`/profile/${id}`} className={styles.nameLink}>
               {name}
             </Link>
           </h3>
@@ -79,10 +130,15 @@ const AuthorInfo = ({
           </div>
         </div>
 
-        {showFollowButton && (
+        {showFollowButton && user && !isOwnProfile && (
           <div className={styles.action}>
-            <Button size="sm" variant="primary">
-              Follow
+            <Button
+              size="sm"
+              variant={isFollowing ? "secondary" : "primary"}
+              onClick={handleToggleFollow}
+              disabled={followLoading}
+            >
+              {isFollowing ? "Unfollow" : "Follow"}
             </Button>
           </div>
         )}

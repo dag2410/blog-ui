@@ -7,11 +7,12 @@ import authReducer from "@/features/auth/authSlice";
 import topicReducer from "@/features/topic/topicSlice";
 import postReducer from "@/features/post/postSlice";
 import commentReducer from "@/features/comment/commentSlice";
+import followReducer from "@/features/follow/followSlice";
 
 const rootConfig = {
   key: "root",
   storage,
-  whitelist: ["auth"],
+  whitelist: ["auth", "follow"],
 };
 
 const rootReducer = combineReducers({
@@ -19,6 +20,7 @@ const rootReducer = combineReducers({
   topic: topicReducer,
   post: postReducer,
   comment: commentReducer,
+  follow: followReducer,
 });
 
 export const store = configureStore({

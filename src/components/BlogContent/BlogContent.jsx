@@ -95,7 +95,9 @@ const BlogContent = ({
               </Link>
               <div className={styles.dateInfo}>
                 <time dateTime={publishedAt} className={styles.publishDate}>
-                  {formatDate(publishedAt)}
+                  {publishedAt
+                    ? formatDate(publishedAt)
+                    : formatDate(updatedAt)}
                 </time>
                 {updatedAt && updatedAt !== publishedAt && (
                   <span className={styles.updateInfo}>

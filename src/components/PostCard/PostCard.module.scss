@@ -51,6 +51,13 @@
 .title {
   margin: 0;
   line-height: $leading-tight;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  line-clamp: 3;
+  box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .titleLink {

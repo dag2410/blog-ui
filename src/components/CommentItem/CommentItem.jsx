@@ -150,8 +150,7 @@ const CommentItem = ({
             <div className={styles.info}>
               <Link
                 to={`/profile/${
-                  author?.username ||
-                  author?.name?.toLowerCase().replace(/\s+/g, "-")
+                  author?.id || author?.name?.toLowerCase().replace(/\s+/g, "-")
                 }`}
                 className={styles.authorName}
               >

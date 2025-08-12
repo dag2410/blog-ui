@@ -82,7 +82,9 @@ const PostList = ({
               title={post.title}
               description={post.description}
               author={{ id: post?.users?.id, name: post?.users?.username }}
-              publishedAt={post.published_at}
+              publishedAt={
+                post.published_at ? post.published_at : post.createdAt
+              }
               readTime={calculateReadTime(post.content)}
               topic={post.topics.map((topic) => topic.name).join(" · ")}
               slug={post.slug}

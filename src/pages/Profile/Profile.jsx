@@ -12,11 +12,17 @@ import ChatWindow from "../../components/ChatWindow/ChatWindow";
 import styles from "./Profile.module.scss";
 import { useDispatch, useSelector } from "react-redux";
 import { getCurrentUser } from "@/features/auth/authAsync";
-import { fetchUserPosts } from "@/features/post/postAsync";
+import { fetchPosts, fetchUserPosts } from "@/features/post/postAsync";
 import { fetchUser } from "@/features/user/userAsync";
+import {
+  fetchFollowers,
+  fetchFollowing,
+  toggleFollow,
+} from "@/features/follow/followAsync";
 
 const Profile = () => {
   const { id } = useParams();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -27,17 +33,26 @@ const Profile = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isChatMinimized, setIsChatMinimized] = useState(false);
-  const dispatch = useDispatch();
   const [isOwnProfile, setIsOwnProfile] = useState(false);
+  const user = useSelector((state) => state.auth.currentUser);
+  const followLoading = useSelector((state) => state.follow.isLoading);
+  const isFollowing = useSelector((state) =>
+    state.follow.following.some((fl) => String(fl.id) === String(id))
+  );
+  const postsCount = useSelector((state) => state.post.items.counts?.all);
 
   useEffect(() => {
     const loadProfile = async () => {
       setLoading(true);
       const result = await dispatch(getCurrentUser());
       const currentUser = result.payload;
-      console.log(currentUser);
       const isOwn = String(currentUser?.id) === String(id);
       setIsOwnProfile(isOwn);
+
+      if (currentUser?.id) {
+        await dispatch(fetchFollowing(currentUser.id));
+        await dispatch(fetchFollowers(currentUser.id));
+      }
 
       if (isOwn) {
         setProfile(currentUser);
@@ -50,7 +65,20 @@ const Profile = () => {
     };
 
     loadProfile();
-  }, [id]);
+  }, [id, dispatch]);
+
+  const handleToggleFollow = async () => {
+    if (!user?.id) return;
+    setProfile((user) => ({
+      ...user,
+      followers_count: isFollowing
+        ? (user.followers_count || 0) - 1
+        : (user.followers_count || 0) + 1,
+    }));
+    await dispatch(toggleFollow({ following: user.id, followed_id: id }));
+
+    await dispatch(fetchFollowing(user.id));
+  };
 
   useEffect(() => {
     const loadPosts = async () => {
@@ -68,7 +96,7 @@ const Profile = () => {
     if (profile) {
       loadPosts();
     }
-  }, [profile, currentPage, activeTab]);
+  }, [profile, currentPage, activeTab, dispatch]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -165,8 +193,13 @@ const Profile = () => {
                   </Button>
                 ) : (
                   <>
-                    <Button variant="primary" size="md">
-                      Follow
+                    <Button
+                      variant={isFollowing ? "secondary" : "primary"}
+                      size="md"
+                      onClick={handleToggleFollow}
+                      disabled={followLoading}
+                    >
+                      {isFollowing ? "Unfollow" : "Follow"}
                     </Button>
                     <Button
                       variant="ghost"
@@ -331,7 +364,7 @@ const Profile = () => {
                 }`}
                 onClick={() => setActiveTab("posts")}
               >
-                Posts ({profile.post_count || 0})
+                Posts ({postsCount || 0})
               </button>
               <button
                 className={`${styles.tab} ${

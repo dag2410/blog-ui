@@ -12,7 +12,7 @@ export const fetchPosts = createAsyncThunk(
 
 export const fetchPost = createAsyncThunk("posts/fetchOne", async (slug) => {
   const response = await postService.getOne(slug);
-  return response;
+  return response.data;
 });
 
 export const createPost = createAsyncThunk("posts/create", async (data) => {
@@ -24,6 +24,7 @@ export const updatePost = createAsyncThunk(
   "posts/update",
   async ({ slug, data }) => {
     const response = await postService.update(slug, data);
+    console.log(response);
     return response.data;
   }
 );
@@ -35,8 +36,14 @@ export const deletePost = createAsyncThunk("posts/delete", async (slug) => {
 
 export const fetchUserPosts = createAsyncThunk(
   "posts/fetchUserPosts",
-  async ({ userId, page = 1, limit = 10 }) => {
-    const response = await postService.getUserPosts(userId, page, limit);
+  async ({ userId, page = 1, limit = 10, search = "", status = "all" }) => {
+    const response = await postService.getUserPosts(
+      userId,
+      page,
+      limit,
+      search,
+      status
+    );
     return response.data;
   }
 );

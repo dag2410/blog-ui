@@ -8,7 +8,7 @@ import { toggleLike } from "@/features/like/likeAsync";
 import { fetchPost, fetchRelatedPosts } from "@/features/post/postAsync";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   AuthorInfo,
   BlogContent,
@@ -21,6 +21,7 @@ import { toggleBookmark } from "@/features/bookmark/bookmarkAsync";
 
 const BlogDetail = () => {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [isAuthenticated] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
@@ -30,15 +31,14 @@ const BlogDetail = () => {
   const [commentEdit, setCommentEdit] = useState([]);
 
   const dispatch = useDispatch();
-  const post = useSelector((state) => state.post?.selected?.data);
+  const post = useSelector((state) => state.post?.selected);
   const user = useSelector((state) => state.auth?.currentUser);
   const relatedPosts = useSelector((state) => state.post?.relatedPosts);
   const comments = useSelector((state) => state.comment?.items || []);
   const commentsLoading = useSelector((state) => state.comment?.loading);
-  const bookmarks = useSelector(
-    (state) => state.post?.selected?.data.bookmarks
-  );
-  const isBookmarked = bookmarks?.some((b) => b.user_id === user.id);
+  const bookmarks = useSelector((state) => state.post?.selected?.bookmarks);
+  const isBookmarked = bookmarks?.some((b) => b.user_id === user?.id);
+  const isPublished = post?.status === "published";
 
   useEffect(() => {
     const loadPost = async () => {
@@ -78,18 +78,14 @@ const BlogDetail = () => {
   }, [post?.id, dispatch]);
 
   const handleAddComment = async (content) => {
-    if (!post?.id) return;
-
+    if (!isPublished || !post?.id) return;
     try {
       const commentData = {
         post_id: post.id,
-        content: content,
+        content,
         user_id: user.id,
       };
-
-      const commentEdit = await dispatch(createComment(commentData));
-      setCommentEdit(commentEdit);
-      console.log("Comment added successfully");
+      await dispatch(createComment(commentData));
       await dispatch(fetchComments({ postId: post.id }));
     } catch (error) {
       console.error("Failed to add comment:", error);
@@ -97,49 +93,40 @@ const BlogDetail = () => {
   };
 
   const handleReplyComment = async (parentId, content) => {
-    if (!post?.id) return;
-
+    if (!isPublished || !post?.id) return;
     try {
       const replyData = {
         post_id: post.id,
         parent_id: parentId,
-        content: content,
+        content,
         user_id: user.id,
       };
-
       await dispatch(createComment(replyData));
       await dispatch(fetchComments({ postId: post.id }));
-      console.log("Reply added successfully");
     } catch (error) {
       console.error("Failed to add reply:", error);
     }
   };
 
   const handleEditComment = async (commentId, newContent) => {
+    if (!isPublished) return;
     try {
-      const updateData = {
-        content: newContent,
-      };
-
       await dispatch(
         updateComment({
           id: commentId,
-          data: updateData,
+          data: { content: newContent },
         })
       );
-
       dispatch(fetchComments({ postId: post.id }));
-
-      console.log("Comment edited successfully:", commentId);
     } catch (error) {
       console.error("Failed to edit comment:", error);
     }
   };
 
   const handleDeleteComment = async (commentId) => {
+    if (!isPublished) return;
     try {
       await dispatch(deleteComment(commentId));
-      console.log("Comment deleted successfully:", commentId);
     } catch (error) {
       console.error("Failed to delete comment:", error);
     }
@@ -147,31 +134,24 @@ const BlogDetail = () => {
 
   useEffect(() => {
     if (!post || !user) return;
-
     const liked =
       Array.isArray(post.likes) &&
       post.likes.some((like) => like.user_id === user.id);
-
     setIsLiked(liked);
   }, [post, user]);
+
   const handleLikeComment = async (commentId) => {
-    if (likingInProgress || !user || !commentId) return;
-
+    if (likingInProgress || !user || !commentId || !isPublished) return;
     setLikingInProgress(true);
-    const payload = {
-      likeable_type: "Comment",
-      likeable_id: commentId,
-    };
-
     try {
-      const result = await dispatch(toggleLike(payload)).unwrap();
+      const result = await dispatch(
+        toggleLike({ likeable_type: "Comment", likeable_id: commentId })
+      ).unwrap();
       const action = result?.action;
-
       setLikedComments((prev) => ({
         ...prev,
         [commentId]: action === "liked",
       }));
-
       await dispatch(fetchComments({ postId: post.id }));
     } catch (error) {
       console.error("Failed to toggle like:", error);
@@ -181,19 +161,13 @@ const BlogDetail = () => {
   };
 
   const handleLikePost = async () => {
-    if (likingInProgress || !user || !post?.id) return;
-
+    if (likingInProgress || !user || !post?.id || !isPublished) return;
     setLikingInProgress(true);
-    const payload = {
-      likeable_type: "Post",
-      likeable_id: post.id,
-    };
-
     try {
-      const result = await dispatch(toggleLike(payload)).unwrap();
-      const action = result?.action;
-      setIsLiked(action === "liked");
-
+      const result = await dispatch(
+        toggleLike({ likeable_type: "Post", likeable_id: post.id })
+      ).unwrap();
+      setIsLiked(result?.action === "liked");
       await dispatch(fetchPost(slug));
     } catch (error) {
       console.error("Failed to toggle like:", error);
@@ -201,13 +175,12 @@ const BlogDetail = () => {
       setLikingInProgress(false);
     }
   };
+
   const handleToggleBookmark = async () => {
+    if (!isPublished) return;
     try {
       await dispatch(
-        toggleBookmark({
-          user_id: user.id,
-          post_id: post.id,
-        })
+        toggleBookmark({ user_id: user.id, post_id: post.id })
       ).unwrap();
       await dispatch(fetchPost(slug));
     } catch (error) {
@@ -237,49 +210,36 @@ const BlogDetail = () => {
 
   return (
     <div className={styles.container}>
-      {/* Article Header with Interactions */}
       <div className={styles.articleHeader}>
         <BlogContent {...post} />
 
-        {/* Post Interactions - Moved to top for better UX */}
         <div className={styles.interactions}>
-          {/* Stats */}
           <div className={styles.stats}>
-            {/* Views */}
             <div className={styles.stat}>
-              <svg viewBox="0 0 16 16" fill="none">
-                <path
-                  d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <circle cx="8" cy="8" r="2" />
-              </svg>
+              {/* views icon */}
               <span>{post.views_count} views</span>
             </div>
-
-            {/* Likes */}
             <div className={styles.stat}>
-              <svg viewBox="0 0 16 16" fill="none">
-                <path
-                  d="M14 6.5c0 4.8-5.25 7.5-6 7.5s-6-2.7-6-7.5C2 3.8 4.8 1 8 1s6 2.8 6 5.5z"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              {/* likes icon */}
               <span>{post.likes_count} likes</span>
             </div>
           </div>
+          {post.status === "draft" && user?.id === post.user_id && (
+            <button
+              className={styles.editButton}
+              onClick={() => navigate(`/write/${post.slug}`)}
+            >
+              Chỉnh sửa
+            </button>
+          )}
 
-          {/* Action Buttons */}
           <div className={styles.actions}>
-            {/* Like Button */}
             <button
               className={`${styles.actionButton} ${
                 isLiked ? styles.liked : ""
               } ${likingInProgress ? styles.loading : ""}`}
               onClick={handleLikePost}
-              disabled={likingInProgress}
+              disabled={likingInProgress || !isPublished}
               title={isLiked ? "Unlike" : "Like"}
               aria-label={`${isLiked ? "Unlike" : "Like"} this post`}
             >
@@ -295,13 +255,12 @@ const BlogDetail = () => {
               {isLiked ? "Liked" : "Like"}
             </button>
 
-            {/* Bookmark Button */}
             <button
               className={`${styles.actionButton} ${
                 isBookmarked ? styles.bookmarked : ""
               } ${bookmarkingInProgress ? styles.loading : ""}`}
               onClick={handleToggleBookmark}
-              disabled={bookmarkingInProgress}
+              disabled={bookmarkingInProgress || !isPublished}
               title={isBookmarked ? "Remove bookmark" : "Bookmark"}
               aria-label={`${
                 isBookmarked ? "Remove bookmark from" : "Bookmark"
@@ -325,7 +284,6 @@ const BlogDetail = () => {
         </div>
       </div>
 
-      {/* Author Info */}
       <div className={styles.authorSection}>
         <AuthorInfo
           author={{
@@ -344,27 +302,30 @@ const BlogDetail = () => {
               website: post.users.website_url,
             },
           }}
+          showFollowButton={post.users.id === user.id ? false : true}
         />
       </div>
 
-      {/* Related Posts */}
       <div className={styles.contentSection}>
         <RelatedPosts posts={[...relatedPosts]} />
       </div>
 
-      {/* Comments */}
       <div className={styles.contentSection}>
-        <CommentSection
-          comments={comments}
-          loading={commentsLoading}
-          onAddComment={handleAddComment}
-          onReplyComment={handleReplyComment}
-          onLikeComment={handleLikeComment}
-          onEditComment={handleEditComment}
-          onDeleteComment={handleDeleteComment}
-          isAuthenticated={isAuthenticated}
-          likes={comments.likes_count || 0}
-        />
+        {isPublished ? (
+          <CommentSection
+            comments={comments}
+            loading={commentsLoading}
+            onAddComment={handleAddComment}
+            onReplyComment={handleReplyComment}
+            onLikeComment={handleLikeComment}
+            onEditComment={handleEditComment}
+            onDeleteComment={handleDeleteComment}
+            isAuthenticated={isAuthenticated}
+            likes={comments.likes_count || 0}
+          />
+        ) : (
+          <p>Bài viết chưa được xuất bản, không thể tương tác.</p>
+        )}
       </div>
     </div>
   );

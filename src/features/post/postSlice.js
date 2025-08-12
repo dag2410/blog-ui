@@ -1,15 +1,15 @@
-import { createSlice } from "@reduxjs/toolkit";
 import {
+  createPost,
+  deletePost,
+  fetchFeaturedPosts,
   fetchPost,
   fetchPosts,
-  createPost,
-  updatePost,
-  deletePost,
-  fetchUserPosts,
-  fetchFeaturedPosts,
   fetchRecentPosts,
   fetchRelatedPosts,
+  fetchUserPosts,
+  updatePost,
 } from "@/features/post/postAsync";
+import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   items: [],
@@ -70,6 +70,9 @@ const postSlice = createSlice({
         state.isLoading = true;
       })
       .addCase(createPost.fulfilled, (state, action) => {
+        if (!Array.isArray(state.items)) {
+          state.items = [];
+        }
         state.items.push(action.payload);
         state.isLoading = false;
         state.message = "Tạo bài viết thành công.";
@@ -83,9 +86,11 @@ const postSlice = createSlice({
         state.isLoading = true;
       })
       .addCase(updatePost.fulfilled, (state, action) => {
-        state.items = state.items.map((post) =>
-          post.slug === action.payload.slug ? action.payload : post
-        );
+        state.items = Array.isArray(state.items)
+          ? state.items.map((post) =>
+              post.slug === action.payload.slug ? action.payload : post
+            )
+          : [action.payload];
         if (state.selected && state.selected.slug === action.payload.slug) {
           state.selected = action.payload;
         }

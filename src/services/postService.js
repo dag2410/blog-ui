@@ -31,9 +31,15 @@ export const del = async (slug) => {
   return response;
 };
 
-export const getUserPosts = async (userId, page = 1, limit = 10) => {
+export const getUserPosts = async (
+  userId,
+  page = 1,
+  limit = 10,
+  search = "",
+  status = "all"
+) => {
   const response = await httpRequest.get(`/posts/user/${userId}`, {
-    params: { page, limit },
+    params: { page, limit, search, status },
   });
   return response;
 };
@@ -48,7 +54,7 @@ export const getRecentPosts = async () => {
   return response;
 };
 
-export const getRelatedPosts = async ( topicId, excludeSlug) => {
+export const getRelatedPosts = async (topicId, excludeSlug) => {
   const response = await httpRequest.get("/posts/related", {
     params: {
       topicId,

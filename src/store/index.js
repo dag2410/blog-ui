@@ -8,6 +8,7 @@ import topicReducer from "@/features/topic/topicSlice";
 import postReducer from "@/features/post/postSlice";
 import commentReducer from "@/features/comment/commentSlice";
 import followReducer from "@/features/follow/followSlice";
+import settingReducer from "@/features/setting/settingSlice";
 
 const rootConfig = {
   key: "root",
@@ -21,6 +22,7 @@ const rootReducer = combineReducers({
   post: postReducer,
   comment: commentReducer,
   follow: followReducer,
+  setting: settingReducer,
 });
 
 export const store = configureStore({

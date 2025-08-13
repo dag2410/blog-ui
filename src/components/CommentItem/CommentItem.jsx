@@ -37,6 +37,7 @@ const CommentItem = ({
     isEdited = false,
   } = comment;
 
+  const canModify = user && user?.id === author?.id;
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -163,7 +164,7 @@ const CommentItem = ({
             </div>
 
             {/* Actions Dropdown - Only show if user can edit/delete */}
-            {showActions && (onEdit || onDelete) && (
+            {canModify && showActions && (onEdit || onDelete) && (
               <div className={styles.actionsDropdown} ref={dropdownRef}>
                 <button
                   className={styles.moreButton}

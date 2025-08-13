@@ -107,7 +107,7 @@ const FeaturedPosts = ({
               readTime={calculateReadTime(post?.content)}
               topic={post.topics?.map((topic) => topic.name).join(" · ")}
               slug={post?.slug}
-              featuredImage={post.featuredImage}
+              featuredImage={post.thumbnail}
               likes={post.likes_count || 0}
               views={post.views_count || 0}
               isLiked={
@@ -121,6 +121,7 @@ const FeaturedPosts = ({
               showViewCount={true}
               onLike={handleToggleLike}
               onBookmark={handleToggleBookmark}
+              ư
             />
           </div>
         ))}

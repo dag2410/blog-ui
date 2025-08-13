@@ -88,7 +88,7 @@ const PostList = ({
               readTime={calculateReadTime(post.content)}
               topic={post.topics.map((topic) => topic.name).join(" · ")}
               slug={post.slug}
-              featuredImage={post.featuredImage}
+              featuredImage={post.thumbnail}
               likes={post.likes_count}
               isLiked={
                 Array.isArray(post.likes) &&

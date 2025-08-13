@@ -32,9 +32,9 @@ const BlogDetail = () => {
 
   const dispatch = useDispatch();
   const post = useSelector((state) => state.post?.selected);
-  const user = useSelector((state) => state.auth?.currentUser);
+  const user = useSelector((state) => state?.auth?.currentUser);
   const relatedPosts = useSelector((state) => state.post?.relatedPosts);
-  const comments = useSelector((state) => state.comment?.items || []);
+  const comments = useSelector((state) => state.comment.items || []);
   const commentsLoading = useSelector((state) => state.comment?.loading);
   const bookmarks = useSelector((state) => state.post?.selected?.bookmarks);
   const isBookmarked = bookmarks?.some((b) => b.user_id === user?.id);
@@ -87,6 +87,7 @@ const BlogDetail = () => {
       };
       await dispatch(createComment(commentData));
       await dispatch(fetchComments({ postId: post.id }));
+      await dispatch(fetchPost(slug));
     } catch (error) {
       console.error("Failed to add comment:", error);
     }
@@ -211,7 +212,7 @@ const BlogDetail = () => {
   return (
     <div className={styles.container}>
       <div className={styles.articleHeader}>
-        <BlogContent {...post} />
+        <BlogContent {...post} featuredImage={post.cover} />
 
         <div className={styles.interactions}>
           <div className={styles.stats}>
@@ -292,7 +293,7 @@ const BlogDetail = () => {
             title: post.users.title,
             bio: post.users.about,
             avatar: post.users.avatar,
-            postsCount: post.users.post_count,
+            postsCount: post.users.posts_count,
             followers: post.users.followers_count,
             following: post.users.following_count,
             social: {

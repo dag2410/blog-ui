@@ -215,7 +215,8 @@ const Bookmarks = () => {
                   <PostCard
                     title={bookmark.title}
                     description={bookmark.description}
-                    coverImage={bookmark.coverImage}
+                    coverImage={bookmark.cover}
+                    featuredImage={bookmark.thumbnail}
                     readingTime={
                       Math.ceil(
                         bookmark.content

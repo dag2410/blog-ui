@@ -101,7 +101,7 @@ const RelatedPosts = ({
             readTime={calculateReadTime(post.content)}
             topic={post.topics?.map((topic) => topic.name).join(" · ")}
             slug={post.slug}
-            featuredImage={post.featuredImage}
+            featuredImage={post.thumbnail}
             // Like functionality
             likes={post.likes_count || 0}
             views={post.views_count || 0}

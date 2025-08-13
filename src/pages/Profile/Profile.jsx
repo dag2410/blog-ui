@@ -234,7 +234,7 @@ const Profile = () => {
               <h3>Stats</h3>
               <div className={styles.stats}>
                 <div className={styles.stat}>
-                  <strong>{profile.post_count || 0}</strong>
+                  <strong>{postsCount || 0}</strong>
                   <span>Posts</span>
                 </div>
                 <div className={styles.stat}>
@@ -399,7 +399,7 @@ const Profile = () => {
                       title: profile.title,
                       bio: profile.about,
                       avatar: profile.avatar,
-                      postsCount: profile.post_count,
+                      postsCount: profile.posts_count,
                       followers: profile.followers_count,
                       following: profile.following_count,
                       social: {

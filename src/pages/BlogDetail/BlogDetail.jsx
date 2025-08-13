@@ -75,7 +75,7 @@ const BlogDetail = () => {
     if (post?.id) {
       dispatch(fetchComments({ postId: post.id }));
     }
-  }, [post?.id, dispatch]);
+  }, [post, dispatch]);
 
   const handleAddComment = async (content) => {
     if (!isPublished || !post?.id) return;

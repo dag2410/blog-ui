@@ -121,7 +121,7 @@ const FeaturedPosts = ({
               showViewCount={true}
               onLike={handleToggleLike}
               onBookmark={handleToggleBookmark}
-              ư
+              
             />
           </div>
         ))}

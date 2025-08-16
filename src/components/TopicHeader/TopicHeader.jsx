@@ -29,14 +29,14 @@ const TopicHeader = ({ topic, loading = false, className, ...props }) => {
         {/* Topic Icon */}
         {topic.image && (
           <div className={styles.iconContainer}>
-            {typeof topic.image === "string" ? (
-              <span className={styles.emoji}>{topic.image}</span>
-            ) : (
+            {topic.image.startsWith("http") ? (
               <FallbackImage
                 src={topic.image}
                 alt={topic.name}
                 className={styles.image}
               />
+            ) : (
+              <span className={styles.emoji}>{topic.image}</span>
             )}
           </div>
         )}

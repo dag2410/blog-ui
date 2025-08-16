@@ -81,7 +81,11 @@ const PostList = ({
             <PostCard
               title={post.title}
               description={post.description}
-              author={{ id: post?.users?.id, name: post?.users?.username }}
+              author={{
+                id: post?.users?.id,
+                name: post?.users?.username,
+                avatar: post?.users?.avatar,
+              }}
               publishedAt={
                 post.published_at ? post.published_at : post.createdAt
               }

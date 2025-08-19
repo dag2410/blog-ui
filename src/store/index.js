@@ -9,6 +9,7 @@ import postReducer from "@/features/post/postSlice";
 import commentReducer from "@/features/comment/commentSlice";
 import followReducer from "@/features/follow/followSlice";
 import settingReducer from "@/features/setting/settingSlice";
+import uploadReducer from "@/features/upload/uploadSlice";
 
 const rootConfig = {
   key: "root",
@@ -23,6 +24,7 @@ const rootReducer = combineReducers({
   comment: commentReducer,
   follow: followReducer,
   setting: settingReducer,
+  upload: uploadReducer,
 });
 
 export const store = configureStore({

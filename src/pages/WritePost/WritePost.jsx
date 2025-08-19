@@ -10,6 +10,7 @@ import styles from "./WritePost.module.scss";
 import { useDispatch, useSelector } from "react-redux";
 import { createPost, fetchPost, updatePost } from "@/features/post/postAsync";
 import { fetchTopics } from "@/features/topic/topicAsync";
+import { uploadImage } from "@/features/upload/uploadAsync";
 
 const WritePost = () => {
   const { slug } = useParams();
@@ -17,12 +18,14 @@ const WritePost = () => {
   const isEditing = Boolean(slug);
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.currentUser);
+  const [uploading, setUploading] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     content: "",
     coverImage: "",
+    thumbnail: "",
     topics: [],
     status: "draft",
     visibility: "public",
@@ -88,7 +91,7 @@ const WritePost = () => {
       const newTopics = [...formData.topics, topic.trim()];
       setFormData((prev) => ({ ...prev, topics: newTopics }));
       setTopicInput("");
-      console.log("Updated topics:", newTopics); // Debug
+      console.log("Updated topics:", newTopics);
     }
   };
 
@@ -128,13 +131,38 @@ const WritePost = () => {
     }
   };
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      const mockImageUrl = `https://via.placeholder.com/800x400?text=${encodeURIComponent(
-        file.name
-      )}`;
-      setFormData((prev) => ({ ...prev, coverImage: mockImageUrl }));
+      try {
+        setUploading(true);
+        const res = await dispatch(uploadImage(file)).unwrap();
+        setFormData((prev) => ({
+          ...prev,
+          coverImage: res.url,
+          thumbnail: res.url,
+        }));
+      } catch (error) {
+        setErrors((prev) => ({
+          ...prev,
+          coverImage: "Failed to upload cover image",
+        }));
+      } finally {
+        setUploading(false);
+      }
+    }
+  };
+
+  const handleEditorImageUpload = async (file) => {
+    try {
+      setUploading(true);
+      const res = await dispatch(uploadImage(file)).unwrap();
+      return res.url;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      throw new Error("Failed to upload image");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -206,10 +234,16 @@ const WritePost = () => {
                   onChange={(value) =>
                     setFormData((prev) => ({ ...prev, content: value }))
                   }
+                  onImageUpload={handleEditorImageUpload}
                   placeholder="Start writing your post content..."
                   error={errors.content}
                   className={styles.richTextEditor}
                 />
+                {uploading && (
+                  <div className={styles.uploadingIndicator}>
+                    Uploading image...
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -288,14 +322,14 @@ const WritePost = () => {
               variant="secondary"
               onClick={() => handleSave("draft")}
               loading={saving}
-              disabled={saving}
+              disabled={saving || uploading}
             >
               Save Draft
             </Button>
             <Button
               variant="primary"
               onClick={handleOpenPublishModal}
-              disabled={saving}
+              disabled={saving || uploading}
             >
               {isEditing ? "Update" : "Publish"}
             </Button>
@@ -316,7 +350,7 @@ const WritePost = () => {
         handleAddTopic={handleAddTopic}
         handleRemoveTopic={handleRemoveTopic}
         handleImageUpload={handleImageUpload}
-        isPublishing={saving}
+        isPublishing={saving || uploading}
         errors={errors}
       />
     </div>

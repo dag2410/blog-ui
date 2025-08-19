@@ -36,7 +36,6 @@ const MyPosts = () => {
         const paginationData = data.payload.pagination;
         setTotalPage(paginationData.totalPage);
         setCounts(countsData);
-        console.log(postsData);
         setPosts(postsData);
       } catch (error) {
         console.error("Failed to fetch posts:", error);

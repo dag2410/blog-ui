@@ -158,7 +158,7 @@ const Profile = () => {
       {/* Cover Section */}
       <div className={styles.coverSection}>
         <div className={styles.coverImage}>
-          <FallbackImage src={profile.coverImage} alt="Cover" />
+          <FallbackImage src={profile.cover_image} alt="Cover" />
           <div className={styles.coverOverlay}></div>
         </div>
 

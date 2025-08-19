@@ -1,5 +1,5 @@
 const { createSlice } = require("@reduxjs/toolkit");
-const { fetchUser } = require("./userAsync");
+const { fetchUser, updateUser } = require("./userAsync");
 
 const initialState = {
   user: [],
@@ -29,6 +29,19 @@ const userSlice = createSlice({
         state.isLoading = false;
       })
       .addCase(fetchUser.pending, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message;
+      })
+      .addCase(updateUser.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateUser.pending, (state, action) => {
+        state.user = action.payload;
+        state.isLoading = false;
+        state.message = "Cập nhật thành công!";
+      })
+      .addCase(updateUser.pending, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message;
       });

@@ -191,7 +191,7 @@ const EditProfile = () => {
     setLoading(true);
     try {
       const imageUrls = await uploadImages();
-
+ 
       const submitData = {
         ...formData,
         first_name: formData.firstName,
@@ -202,6 +202,9 @@ const EditProfile = () => {
           .split(",")
           .map((s) => s.trim())
           .filter(Boolean),
+        twitter_url: formData.social.twitter || "",
+        github_url: formData.social.github || "",
+        linkedin_url: formData.social.linkedin || "",
       };
 
       const result = await dispatch(

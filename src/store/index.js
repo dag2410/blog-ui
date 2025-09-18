@@ -10,11 +10,14 @@ import commentReducer from "@/features/comment/commentSlice";
 import followReducer from "@/features/follow/followSlice";
 import settingReducer from "@/features/setting/settingSlice";
 import uploadReducer from "@/features/upload/uploadSlice";
+import notificationReducer from "@/features/notification/notificationSlice";
+import conversationReducer from "@/features/conversation/conversationSlice";
+import messageReducer from "@/features/message/messageSlice";
 
 const rootConfig = {
   key: "root",
   storage,
-  whitelist: ["auth", "follow"],
+  whitelist: ["auth", "follow", "message"],
 };
 
 const rootReducer = combineReducers({
@@ -25,6 +28,9 @@ const rootReducer = combineReducers({
   follow: followReducer,
   setting: settingReducer,
   upload: uploadReducer,
+  notification: notificationReducer,
+  conversation: conversationReducer,
+  message: messageReducer,
 });
 
 export const store = configureStore({

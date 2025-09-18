@@ -89,6 +89,7 @@ const RelatedPosts = ({
       <div className={styles.grid}>
         {displayPosts.map((post) => (
           <PostCard
+            id={post.id}
             key={post.id}
             title={post.title}
             description={post.description}

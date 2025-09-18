@@ -79,6 +79,7 @@ const PostList = ({
         {posts.map((post) => (
           <div key={post.id || post.slug} className={styles.postItem}>
             <PostCard
+              id={post.id}
               title={post.title}
               description={post.description}
               author={{

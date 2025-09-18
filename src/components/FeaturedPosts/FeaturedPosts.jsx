@@ -96,6 +96,7 @@ const FeaturedPosts = ({
             }`}
           >
             <PostCard
+              id={post.id}
               title={post.title}
               description={post.description}
               author={{
@@ -121,7 +122,6 @@ const FeaturedPosts = ({
               showViewCount={true}
               onLike={handleToggleLike}
               onBookmark={handleToggleBookmark}
-              
             />
           </div>
         ))}

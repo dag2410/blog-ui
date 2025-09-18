@@ -18,6 +18,7 @@ import {
 } from "../../components";
 import styles from "./BlogDetail.module.scss";
 import { toggleBookmark } from "@/features/bookmark/bookmarkAsync";
+import pusher from "@/services/WebSocketService";
 
 const BlogDetail = () => {
   const { slug } = useParams();
@@ -77,6 +78,52 @@ const BlogDetail = () => {
     }
   }, [post, dispatch]);
 
+  useEffect(() => {
+    if (!post || !user) return;
+    const liked =
+      Array.isArray(post.likes) &&
+      post.likes.some((like) => like.user_id === user.id);
+    setIsLiked(liked);
+  }, [post, user]);
+
+  useEffect(() => {
+    if (!post?.id) return;
+
+    const postChannel = pusher.subscribe(`post-${post.id}`);
+
+    postChannel.bind("like-updated", (data) => {
+      if (data.likeable_type === "Post") {
+        dispatch(fetchPost(slug));
+      }
+    });
+
+    ["new-comment", "update-comment"].forEach((event) => {
+      postChannel.bind(event, () => {
+        dispatch(fetchComments({ postId: post.id }));
+      });
+    });
+
+    postChannel.bind("delete-comment", (data) => {
+      dispatch(deleteComment.fulfilled(data.comment_id));
+    });
+
+    comments.forEach((c) => {
+      const commentChannel = pusher.subscribe(`comment-${c.id}`);
+      commentChannel.bind("like-updated", (data) => {
+        if (data.likeable_type === "Comment") {
+          dispatch(fetchComments({ postId: post.id }));
+        }
+      });
+    });
+
+    return () => {
+      pusher.unsubscribe(`post-${post.id}`);
+      comments.forEach((c) => {
+        pusher.unsubscribe(`comment-${c.id}`);
+      });
+    };
+  }, [post?.id, comments, dispatch, slug]);
+
   const handleAddComment = async (content) => {
     if (!isPublished || !post?.id) return;
     try {
@@ -132,14 +179,6 @@ const BlogDetail = () => {
       console.error("Failed to delete comment:", error);
     }
   };
-
-  useEffect(() => {
-    if (!post || !user) return;
-    const liked =
-      Array.isArray(post.likes) &&
-      post.likes.some((like) => like.user_id === user.id);
-    setIsLiked(liked);
-  }, [post, user]);
 
   const handleLikeComment = async (commentId) => {
     if (likingInProgress || !user || !commentId || !isPublished) return;

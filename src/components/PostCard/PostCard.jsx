@@ -1,12 +1,14 @@
-import { useState, memo } from "react";
+import { useState, memo, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import Card from "../Card/Card";
 import Badge from "../Badge/Badge";
 import FallbackImage from "../FallbackImage/FallbackImage";
 import styles from "./PostCard.module.scss";
+import pusher from "@/services/WebSocketService";
 
 const PostCard = ({
+  id,
   title,
   description,
   author,
@@ -44,6 +46,26 @@ const PostCard = ({
     });
   };
 
+  useEffect(() => {
+    if (!id) return;
+
+    const channel = pusher.subscribe(`post-${id}`);
+    channel.bind("like-updated", (data) => {
+      if (data.action === "liked") {
+        setOptimisticLikes((prev) => prev + 1);
+        if (data.user_id === author?.id) return;
+      } else if (data.action === "unliked") {
+        setOptimisticLikes((prev) => prev - 1);
+        if (data.user_id === author?.id) return;
+      }
+    });
+
+    return () => {
+      channel.unbind("like-updated");
+      pusher.unsubscribe(`post-${id}`);
+    };
+  }, [id, author?.id]);
+
   const handleLike = async () => {
     if (!onLike || likingInProgress) return;
 
@@ -51,9 +73,6 @@ const PostCard = ({
 
     // Optimistic update
     setOptimisticLiked(!optimisticLiked);
-    setOptimisticLikes(
-      optimisticLiked ? optimisticLikes - 1 : optimisticLikes + 1
-    );
 
     try {
       await onLike(slug, !optimisticLiked);

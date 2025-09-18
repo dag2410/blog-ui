@@ -213,11 +213,12 @@ const Bookmarks = () => {
               {filteredBookmarks.map((bookmark) => (
                 <div key={bookmark.id} className={styles.bookmarkItem}>
                   <PostCard
+                    id={post.id}
                     title={bookmark.title}
                     description={bookmark.description}
                     coverImage={bookmark.cover}
                     featuredImage={bookmark.thumbnail}
-                    readingTime={
+                    readingTime={ 
                       Math.ceil(
                         bookmark.content
                           .split(/\s+/)

@@ -228,6 +228,7 @@
   @include body-small;
   font-weight: $font-medium;
   min-width: 50px;
+  min-height: 50px;
 
   &:hover {
     background-color: $bg-secondary;

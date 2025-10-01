@@ -9,11 +9,11 @@ import {
 } from "@/features/post/postAsync";
 import { fetchTrendingTopics } from "@/features/topic/topicAsync";
 import { usePersistReady } from "@/hooks/usePersistReady";
+import ChatBotWindow from "@/components/ChatbotWindow/ChatbotWindow";
 
 const Home = () => {
   const dispatch = useDispatch();
   const isPersistReady = usePersistReady();
-
   const featuredPosts = useSelector((state) => state.post.featuredPosts);
   const loadingFeatured = useSelector(
     (state) => state.post.loadingFeaturedPosts
@@ -23,6 +23,8 @@ const Home = () => {
   const trendingTopics = useSelector(
     (state) => state.topic.trendingTopics.data
   );
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -110,7 +112,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-
       <div className="container">
         {/* Featured Posts */}
         <section id="featured" className={styles.section}>
@@ -185,6 +186,18 @@ const Home = () => {
           </div>
         </section>
       </div>
+      <img
+        src="/chatbot/chatbot.png"
+        alt="chatbot"
+        className={styles.chatbot}
+        onClick={() => setIsChatbotOpen(true)}
+      />
+      <ChatBotWindow
+        isOpen={isChatbotOpen}
+        isMinimized={isMinimized}
+        onClose={() => setIsChatbotOpen(false)}
+        onMinimize={setIsMinimized}
+      />
     </div>
   );
 };

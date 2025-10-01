@@ -40,18 +40,26 @@ const ChatWindow = ({
   const isOnline = onlineUsers[user?.id];
 
   useEffect(() => {
-    if (isOpen) {
-      if (existingConversation) {
-        dispatch(fetchConversation(existingConversation.id));
-      } else {
-        dispatch(
-          createConversations({
-            participantIds: [+user.id],
-          })
-        );
-      }
+    dispatch(fetchConversations());
+  }, [dispatch, user?.id]);
+
+  useEffect(() => {
+    if (!isOpen || loading) return;
+
+    if (existingConversation) {
+      dispatch(fetchConversation(existingConversation.id));
+    } else {
+      dispatch(
+        createConversations({
+          participantIds: [+user.id],
+        })
+      )
+        .unwrap()
+        .then((newConv) => {
+          dispatch(fetchConversation(newConv.id));
+        });
     }
-  }, [isOpen, existingConversation, user, dispatch]);
+  }, [isOpen, existingConversation, user?.id, loading, dispatch]);
 
   useEffect(() => {
     if (isOpen && !isMinimized && current?.messages) {

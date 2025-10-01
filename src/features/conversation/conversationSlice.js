@@ -69,6 +69,7 @@ const conversationSlice = createSlice({
 
       .addCase(createConversations.fulfilled, (state, action) => {
         state.items.unshift(action.payload);
+        state.current = action.payload;
         state.message = "Tạo cuộc trò chuyện thành công.";
       })
 
